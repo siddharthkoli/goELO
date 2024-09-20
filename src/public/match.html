@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Match Result</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center align-items-center vh-100">
+            <div class="col-md-6 col-lg-4">
+                <h2 class="text-center mb-4">Record Match</h2>
+
+                <form id="matchForm">
+                    <div class="mb-3">
+                        <label for="opponentUsername" class="form-label">Opponent Username</label>
+                        <input type="text" class="form-control" id="opponentUsername" placeholder="Search opponent..." list="opponents" required>
+                        <datalist id="opponents">
+                            <!-- Opponents dynamically populated from backend -->
+                        </datalist>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="matchResult" class="form-label">Match Result</label>
+                        <select class="form-select" id="matchResult" required>
+                            <option value="">Select result</option>
+                            <option value="-1">Win</option>
+                            <option value="0">Draw</option>
+                            <option value="1">Lose</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Submit Result</button>
+                </form>
+
+                <!-- Dynamic result display -->
+                <div id="resultMessage" class="alert alert-info mt-4 d-none" role="alert">
+                    <!-- "You: WON" or "You: Lost" or "Draw" will be displayed here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('matchForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const opponent = document.getElementById('opponentUsername').value;
+            const result = document.getElementById('matchResult').value;
+            const resultMessage = document.getElementById('resultMessage');
+
+            let message = '';
+            if (result === '-1') {
+                message = 'You: WON';
+            } else if (result === '1') {
+                message = 'You: Lost';
+            } else if (result === '0') {
+                message = 'Draw';
+            }
+
+            resultMessage.textContent = message;
+            resultMessage.classList.remove('d-none');
+
+            // You can now send this data to your backend using an AJAX call
+            console.log('Opponent: ', opponent, 'Result: ', result);
+        });
+
+        // Fetch opponents from backend and populate datalist
+        function fetchOpponents() {
+            // Simulate a backend call
+            const opponents = ['player1', 'player2', 'player3'];  // Replace with AJAX call to backend
+            const datalist = document.getElementById('opponents');
+            datalist.innerHTML = opponents.map(opponent => `<option value="${opponent}">`).join('');
+        }
+
+        fetchOpponents();
+
+        document.getElementById('matchForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            
+            const opponentUsername = document.getElementById('opponentUsername').value;
+            const matchResult = document.getElementById('matchResult').value;
+
+            const ratingData = {
+                username1: 'test1',  // Assuming this is fetched from your session
+                username2: opponentUsername,
+                winner: matchResult  // -1 for win, 1 for lose, 0 for draw
+            };
+
+            fetch('/api/rating/rating-update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(ratingData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    let resultText;
+                    if (matchResult === '-1') resultText = 'You: WON';
+                    else if (matchResult === '1') resultText = 'You: Lost';
+                    else resultText = 'Draw';
+                    
+                    document.getElementById('resultMessage').innerHTML = resultText;
+                    document.getElementById('resultMessage').classList.remove('d-none');
+                } else {
+                    alert('Rating update failed: ' + data.message);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+    </script>
+</body>
+</html>
