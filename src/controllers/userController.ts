@@ -73,3 +73,36 @@ export const login = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+
+// Function to search for a user by username
+export const searchUser = async (req: Request, res: Response) => {
+  const { username } = req.query;
+
+  if (!username) {
+      return res.status(400).json({ message: 'Username query parameter is required' });
+  }
+
+  try {
+      // Partial Match Query to find the user by username
+      // const [rows] = await pool.query(
+      //     'SELECT id, username, rating FROM users WHERE username LIKE ?',
+      //     [`%${username}%`]  // Use LIKE to allow partial matches
+      // );
+
+      // Complete match query
+      const [rows] = await pool.query(
+          'SELECT username, rating FROM users WHERE username = ?',
+          [`${username}`] 
+      );
+
+      if ([rows].length === 0) {
+          return res.status(404).json({ message: 'No users found' });
+      }
+
+      return res.json(rows);  // Send the matching users
+  } catch (err) {
+      console.error('Error searching user:', err);
+      return res.status(500).json({ message: 'Internal server error' });
+  }
+};
