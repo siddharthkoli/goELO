@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { signup, login } from '../controllers/userController';
+import { signup, login, searchUser } from '../controllers/userController';
 
 const router = Router();
 
@@ -7,6 +7,10 @@ router.post('/signup', signup);
 router.post('/login', login);
 
 import { authenticateJWT } from '../middleware/auth';
+
+// Search user by username
+router.get('/search', searchUser);  // Add this route for searching users
+
 
 router.get('/profile', authenticateJWT, (req, res) => {
   // Protected route logic here
