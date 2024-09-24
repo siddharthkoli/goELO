@@ -13,12 +13,10 @@
                 <h2 class="text-center mb-4">Record Match</h2>
 
                 <form id="matchForm">
-                    <div class="mb-3">
+                    <div class="mb-3 position-relative">
                         <label for="opponentUsername" class="form-label">Opponent Username</label>
-                        <input type="text" class="form-control" id="opponentUsername" placeholder="Search opponent..." list="opponents" required>
-                        <datalist id="opponents">
-                            <!-- Opponents dynamically populated from backend -->
-                        </datalist>
+                        <input type="text" class="form-control" id="opponentUsername" placeholder="Search opponent..." required>
+                        <div id="usernameFeedback" class="position-absolute start-0 mt-1 text-danger" style="font-size: 0.8em;"></div>
                     </div>
 
                     <div class="mb-3">
@@ -44,22 +42,57 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function checkJWT() {
-            const jwtCookie = document.cookie
-                .split('; ')
-                .find(row => row.startsWith('jwt='));
-            
-            // If there's no JWT in the cookies, redirect to the login page
-            if (!jwtCookie) {
-                alert("You need to log in first.");
-                window.location.href = '/';  // Assuming login/signup page is at the root
-            }
+        const opponentUsernameInput = document.getElementById('opponentUsername');
+        const usernameFeedback = document.getElementById('usernameFeedback');
+        let debounceTimer;
+
+        // Debounce function to delay the API call
+        function debounce(func, delay) {
+            return function () {
+                const context = this;
+                const args = arguments;
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => func.apply(context, args), delay);
+            };
         }
 
-        // Run this function when the page loads
-        window.onload = function() {
-            checkJWT();
-        };
+        // Function to check if username exists
+        function checkUsernameExists(username) {
+            fetch(`/api/users/search?username=${encodeURIComponent(username)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        // If user exists, clear feedback
+                        usernameFeedback.textContent = '';
+                        opponentUsernameInput.classList.remove('is-invalid');
+                        opponentUsernameInput.classList.add('is-valid');
+                    } else {
+                        // If user does not exist, show feedback
+                        usernameFeedback.textContent = 'User does not exist';
+                        opponentUsernameInput.classList.remove('is-valid');
+                        opponentUsernameInput.classList.add('is-invalid');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking username:', error);
+                    usernameFeedback.textContent = 'Error checking username';
+                    opponentUsernameInput.classList.remove('is-valid');
+                    opponentUsernameInput.classList.add('is-invalid');
+                });
+        }
+
+         // Attach the debounce function to the input field
+         opponentUsernameInput.addEventListener('input', debounce(function () {
+            const username = opponentUsernameInput.value.trim();
+            if (username.length > 0) {
+                checkUsernameExists(username);
+            } else {
+                // Clear feedback if the input is empty
+                usernameFeedback.textContent = '';
+                opponentUsernameInput.classList.remove('is-valid', 'is-invalid');
+            }
+        }, 500));  // 500ms debounce delay
+
         document.getElementById('matchForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const opponent = document.getElementById('opponentUsername').value;
@@ -82,17 +115,7 @@
             console.log('Opponent: ', opponent, 'Result: ', result);
         });
 
-        // Fetch opponents from backend and populate datalist
-        function fetchOpponents() {
-            // Simulate a backend call
-            const opponents = ['player1', 'player2', 'player3'];  // Replace with AJAX call to backend
-            const datalist = document.getElementById('opponents');
-            datalist.innerHTML = opponents.map(opponent => `<option value="${opponent}">`).join('');
-        }
-
         let username1 = '';
-
-        fetchOpponents();
 
         fetchUsername().then((username) => {
             console.log(`data: ${username}`);
@@ -140,7 +163,9 @@
         })
         .then(response => {
             if (!response.ok) {
-                throw new Error('User not logged in');
+                // throw new Error('User not logged in');
+                alert('user not logged in');
+                window.location.href = '/';
             }
             return response.json();  // Return the parsed JSON response
         })
