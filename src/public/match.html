@@ -44,6 +44,22 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        function checkJWT() {
+            const jwtCookie = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('jwt='));
+            
+            // If there's no JWT in the cookies, redirect to the login page
+            if (!jwtCookie) {
+                alert("You need to log in first.");
+                window.location.href = '/';  // Assuming login/signup page is at the root
+            }
+        }
+
+        // Run this function when the page loads
+        window.onload = function() {
+            checkJWT();
+        };
         document.getElementById('matchForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const opponent = document.getElementById('opponentUsername').value;
