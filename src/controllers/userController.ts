@@ -25,7 +25,14 @@ export const signup = async (req: Request, res: Response) => {
     );
 
     res.status(201).json({ message: 'User created', userId: (result as any).insertId });
-  } catch (error) {
+  } catch (error: any) {
+     // Check for duplicate entry error (MySQL error code for duplicate entry is ER_DUP_ENTRY)
+     if (error.code === 'ER_DUP_ENTRY') {
+      if (error.sqlMessage.includes('for key \'users.unique_email\''))
+        return res.status(409).json({ message: 'Email already exists.' });
+      return res.status(409).json({ message: 'Username already exists.' }); // 409 Conflict
+    }
+
     console.error(error);
     res.status(500).json({ message: 'Server error' });
   }

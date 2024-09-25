@@ -98,6 +98,11 @@
                     alert('Signup successful! Please login.');
                     // Toggle to login form after successful signup
                     document.getElementById('showLogin').click();
+                } else if (data.message === 'Username already exists.') {
+                    // Handle specific error message for duplicate username
+                    alert('Signup failed: Username already exists. Please choose another username.');
+                } else if (data.message === 'Email already exists.') {
+                    alert('Email is already registered. Please login.');
                 } else {
                     alert('Signup failed: ' + data.message);
                 }
