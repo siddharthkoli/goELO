@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';  
 import userRoutes from './routes/userRoutes';
 import ratingRoutes from './routes/ratingRoutes';
+import matchRoutes from './routes/matchRoutes';
 import path from 'path';
 
 
@@ -27,6 +28,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api/users', userRoutes);
 app.use('/api/rating', ratingRoutes);
+app.use('/api/match', matchRoutes);
 
 // Serve the login/signup page for the root URL
 app.get('/', (req, res) => {
